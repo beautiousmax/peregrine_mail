@@ -16,7 +16,7 @@
 |id     |PRIMARY KEY
 |contents|
 |to|
-|from|
+|sender|
 |cc|
 |bcc|
 |subject|
