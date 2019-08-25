@@ -1,7 +1,7 @@
 from flask import Blueprint, request, abort, jsonify
 
 from data.models import Email, Delivery
-from data.database import db_session
+from data.database import db
 from sending_emails import send_email
 
 blueprint = Blueprint('email', __name__, url_prefix='/')
@@ -48,14 +48,14 @@ def new_email():
     # add new email to database
     email = Email(**data)
 
-    db_session.add(email)
-    db_session.commit()
+    db.session.add(email)
+    db.session.commit()
 
     # get id
-    db_session.refresh(email)
+    db.session.refresh(email)
 
     # add all the email info to queue
-    send_email(**data)
+    send_email(email_id=email.id, **data)
 
     # return the new id
     return jsonify({"email_id": email.id})
@@ -64,15 +64,58 @@ def new_email():
 @blueprint.route('/', methods=['GET'])
 def all_emails():
     """GET returns all email statuses"""
-    statuses = {}
-    emails = db_session.query(Email).all()
+    emails_with_statuses = []
+
+    emails = db.session.query(Email).all()
     for email in emails:
-        status = db_session.query(Delivery).filter(Delivery.email_id == email.id).order_by(Delivery.attempt).first()
-        statuses[email.id] = status
-    return jsonify(statuses) if statuses else "No emails are here"
+        status = db.session.query(Delivery).filter(Delivery.email_id == email.id).order_by(Delivery.attempt).all()
+
+        e = {"id": email.id,
+             "contents": email.contents,
+             "to": email.to,
+             "sender": email.sender,
+             "cc": email.cc,
+             "bcc": email.bcc,
+             "subject": email.subject,
+             "attachments": email.attachments,
+             "html": email.html,
+             "created": email.created,
+             "delivery_attempts": []}
+
+        for attempt in status:
+            s = {"status": attempt.status,
+                 "server_message": attempt.server_message,
+                 "attempt": attempt.attempt}
+            e['delivery_attempts'].append(s)
+
+        emails_with_statuses.append(e)
+    return jsonify(emails_with_statuses) if emails_with_statuses else "No emails are here"
 
 
-@blueprint.route('/<email_id>')
+@blueprint.route('/<email_id>', methods=['GET'])
 def specific_email(email_id):
-    status = db_session.query(Delivery).filter(Delivery.email_id == email_id).order_by(Delivery.attempt).first()
-    return jsonify(status)
+
+    email = db.session.query(Email).filter(Email.id == email_id).first()
+    if not email:
+        abort(404)
+
+    e = {"id": email.id,
+         "contents": email.contents,
+         "to": email.to,
+         "sender": email.sender,
+         "cc": email.cc,
+         "bcc": email.bcc,
+         "subject": email.subject,
+         "attachments": email.attachments,
+         "html": email.html,
+         "created": email.created,
+         "delivery_attempts": []}
+
+    status = db.session.query(Delivery).filter(Delivery.email_id == email_id).order_by(Delivery.attempt).all()
+    for attempt in status:
+        s = {"status": attempt.status,
+             "server_message": attempt.server_message,
+             "attempt": attempt.attempt}
+        e['delivery_attempts'].append(s)
+
+    return jsonify(e)

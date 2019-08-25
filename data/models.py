@@ -1,12 +1,10 @@
 import datetime
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import (Column, Integer, Text, ForeignKey, DateTime)
 
+from data.database import db
 
-Base = declarative_base()
 
-
-class Email(Base):
+class Email(db.Model):
     __tablename__ = "email"
 
     id = Column(Integer, primary_key=True)
@@ -21,7 +19,7 @@ class Email(Base):
     created = Column(DateTime, default=datetime.datetime.now)
 
 
-class Delivery(Base):
+class Delivery(db.Model):
     __tablename__ = "delivery"
 
     id = Column(Integer, primary_key=True)

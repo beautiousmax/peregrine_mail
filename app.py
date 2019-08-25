@@ -1,10 +1,12 @@
 import flask
 
 from views import email_api
-from data import database
+from data.database import db
 
 app = flask.Flask('peregrine')
 
-database.init_database()
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///email_db.sqlite'
 
-app.register_blueprint(email_api.blueprint)
+db.init_app(app)
+
+app.register_blueprint(email_api.blueprint, url_prefix="/api/v1")
