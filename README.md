@@ -25,7 +25,7 @@ pip install -r requirements
     - Modify to use you own smtp settings 
 6. Run
 ```
-python main.py
+python -m peregrine_mail
 ```
 
 ## API METHODS

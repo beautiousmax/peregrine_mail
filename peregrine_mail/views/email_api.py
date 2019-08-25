@@ -1,7 +1,7 @@
 from flask import Blueprint, request, abort, jsonify, current_app
 
-from data.models import Email, email_deliveries_to_dict
-from data.database import db
+from peregrine_mail.data.models import Email, email_deliveries_to_dict
+from peregrine_mail.data.database import db
 
 blueprint = Blueprint('email', __name__, url_prefix='/')
 

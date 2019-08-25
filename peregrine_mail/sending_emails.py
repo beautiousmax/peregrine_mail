@@ -3,8 +3,8 @@ import datetime
 import smtplib
 import ssl
 
-from data.models import Delivery, email_to_dict
-from data.database import db
+from peregrine_mail.data.models import Delivery, email_to_dict
+from peregrine_mail.data.database import db
 
 
 def send_email(app, email_id, subject, sender, contents, html="", to=(), cc=(), bcc=(), **kwargs):
@@ -27,6 +27,7 @@ def send_email(app, email_id, subject, sender, contents, html="", to=(), cc=(), 
         msg.add_alternative(html, subtype='html')
 
     print(msg.as_string())
+    # TODO awesome logging everywhere
     delivery_attempt = Delivery(email_id=email_id, status="", server_message="")
 
     try:

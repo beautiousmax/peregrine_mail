@@ -1,9 +1,9 @@
 import threading
 import time
 
-from data.models import Email
-from data.database import db
-from sending_emails import send_email, find_mail_to_send, find_mail_to_delete
+from peregrine_mail.data.models import Email
+from peregrine_mail.data.database import db
+from peregrine_mail.sending_emails import send_email, find_mail_to_send, find_mail_to_delete
 
 
 class Threading:

@@ -2,7 +2,7 @@ import datetime
 from sqlalchemy import (Column, Integer, Text, ForeignKey, DateTime)
 from sqlalchemy.orm import relationship
 
-from data.database import db
+from peregrine_mail.data.database import db
 
 
 class Delivery(db.Model):
