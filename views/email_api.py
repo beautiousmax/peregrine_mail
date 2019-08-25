@@ -1,8 +1,7 @@
-from flask import Blueprint, request, abort, jsonify
+from flask import Blueprint, request, abort, jsonify, current_app
 
 from data.models import Email, Delivery
 from data.database import db
-from sending_emails import send_email
 
 blueprint = Blueprint('email', __name__, url_prefix='/')
 
@@ -55,7 +54,8 @@ def new_email():
     db.session.refresh(email)
 
     # add all the email info to queue
-    send_email(email_id=email.id, **data)
+    data['id'] = email.id
+    current_app.config['EMAIL_QUEUE'].put(data)
 
     # return the new id
     return jsonify({"email_id": email.id})
@@ -69,7 +69,7 @@ def all_emails():
     emails = db.session.query(Email).all()
     for email in emails:
         status = db.session.query(Delivery).filter(Delivery.email_id == email.id).order_by(Delivery.attempt).all()
-
+        # TODO add to dict function to model
         e = {"id": email.id,
              "contents": email.contents,
              "to": email.to,

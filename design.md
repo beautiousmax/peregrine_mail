@@ -21,7 +21,7 @@
 |bcc|
 |subject|
 |attachments|
-|type   | html or text|
+|html   | 
 |created |  timestamp|
 
 
@@ -40,9 +40,7 @@
 1. New message is created using API POST
     - New email is added to email table
     - Email ID is returned to user
-2. ID is sent to message queue
-3. Message queue looks to see past delivery attempts
-    - if attempts < 3 and last attempt > 10 mins ago (or no attempts made), try sending email
-4. Record delivery status in delivery table
-    - if delivery fails, put ID back in message queue
-    - add wait timestamp / delay to message broker for id??
+2. Email info is sent to background thread queue
+3. New emails waiting in queue are sent to smtp server
+4. Thread looks for failed emails that meet criteria to resend
+    - Criteria is if attempts < 3 and last attempt > 10 mins ago

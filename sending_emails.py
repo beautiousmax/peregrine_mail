@@ -6,9 +6,9 @@ from data.models import Email, Delivery
 from data.database import db
 
 
-def send_email(email_id, subject, sender, contents, html="", to=(), cc=(), bcc=(), **kwargs):
+def send_email(app, email_id, subject, sender, contents, html="", to=(), cc=(), bcc=(), **kwargs):
     """Format and send an email message"""
-
+    db.app = app
     msg = EmailMessage()
 
     msg['Subject'] = subject
@@ -47,9 +47,10 @@ def send_email(email_id, subject, sender, contents, html="", to=(), cc=(), bcc=(
     db.session.commit()
 
 
-def find_mail_to_send():
+def find_mail_to_send(app):
     """Find all emails where the latest status is not successful.
     Return email id f number of delivery attempts is less than three and last attempt was >= 10 minutes ago"""
+    db.app = app
     emails_to_send = []
 
     emails = db.session.query(Email).all()
@@ -57,8 +58,9 @@ def find_mail_to_send():
     for email in emails:
         deliveries = db.session.query(Delivery).filter(Delivery.email_id == email.id).order_by(Delivery.attempt).all()
 
-        if deliveries[0].status == "unsuccessful" and len(deliveries) < 3:
-            if deliveries[0].attempt + datetime.timedelta(minutes=10) >= datetime.datetime.now():
-                emails_to_send.append(email.id)
+        if deliveries and deliveries[0].status == "unsuccessful" and len(deliveries) < 3:
+            if deliveries[0].attempt + datetime.timedelta(minutes=10) <= datetime.datetime.now():
+                emails_to_send.append((email.id, email.subject, email.sender, email.contents, email.html, email.to,
+                                       email.cc, email.bcc))
 
     return emails_to_send
