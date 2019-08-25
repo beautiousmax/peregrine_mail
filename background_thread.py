@@ -1,7 +1,9 @@
 import threading
 import time
 
-from sending_emails import send_email, find_mail_to_send
+from data.models import Email
+from data.database import db
+from sending_emails import send_email, find_mail_to_send, find_mail_to_delete
 
 
 class Threading:
@@ -20,12 +22,18 @@ class Threading:
             # Send NEW emails
             self.sending_emails_from_queue()
 
+            db.app = self.app
+            emails = db.session.query(Email).all()
+
             # Resend FAILED emails
-            for email in find_mail_to_send(self.app):
-                send_email(self.app, *email)
+            for email in find_mail_to_send(self.app, emails):
+                send_email(self.app, **email)
+
+            # Delete old emails
+            find_mail_to_delete(emails)
 
             time.sleep(self.sleep_time)
 
     def sending_emails_from_queue(self):
         while not self.email_queue.empty():
-            send_email(self.app, *self.email_queue.get())
+            send_email(self.app, **self.email_queue.get())

@@ -1,0 +1,9 @@
+{
+  "smtp": {
+    "host": "localhost",
+    "port": 2500,
+    "ssl": false,
+    "username": "",
+    "password": ""
+  }
+}

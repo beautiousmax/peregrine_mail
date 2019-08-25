@@ -20,7 +20,10 @@ source venv/bin/activate
 ```
 pip install -r requirements
 ```
-5. Run
+5. Set up config file
+    - Copy config.json.example to config.json
+    - Modify to use you own smtp settings 
+6. Run
 ```
 python main.py
 ```
@@ -29,8 +32,7 @@ python main.py
 - add some swagger / raml api documentation
 ### POST api/v1/
 send email, get back id
-- retry 3 times with 10 minute interval in case of failure
-- log delivery status to database??? "with some retention policy"
+- retry up to 3 times with 10 minute interval in case of failure
 
 ### GET api/v1/<id> 
 see status of specific email
@@ -46,5 +48,4 @@ see status of all email
 - Index of statuses
 
 Maybe use bootstrap
-
 

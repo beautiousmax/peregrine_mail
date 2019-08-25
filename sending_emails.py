@@ -1,8 +1,9 @@
 from email.message import EmailMessage
 import datetime
 import smtplib
+import ssl
 
-from data.models import Email, Delivery
+from data.models import Delivery, email_to_dict
 from data.database import db
 
 
@@ -29,7 +30,14 @@ def send_email(app, email_id, subject, sender, contents, html="", to=(), cc=(), 
     delivery_attempt = Delivery(email_id=email_id, status="", server_message="")
 
     try:
-        smtp = smtplib.SMTP('localhost', port=2500)
+        if app.config['SMTP']['ssl']:
+            smtp = smtplib.SMTP_SSL(app.config['SMTP']['host'], port=app.config['SMTP']['port'],
+                                    context=ssl.create_default_context())
+        else:
+            smtp = smtplib.SMTP(app.config['SMTP']['host'], port=app.config['SMTP']['port'])
+
+        if app.config['SMTP']['username']:
+            smtp.login(user=app.config['SMTP']['username'], password=app.config['SMTP']['password'])
     except ConnectionError as e:
         delivery_attempt.status = "unsuccessful"
         delivery_attempt.server_message = str(e)
@@ -47,20 +55,24 @@ def send_email(app, email_id, subject, sender, contents, html="", to=(), cc=(), 
     db.session.commit()
 
 
-def find_mail_to_send(app):
+def find_mail_to_send(app, all_emails):
     """Find all emails where the latest status is not successful.
     Return email id f number of delivery attempts is less than three and last attempt was >= 10 minutes ago"""
     db.app = app
     emails_to_send = []
 
-    emails = db.session.query(Email).all()
-
-    for email in emails:
+    for email in all_emails:
         deliveries = db.session.query(Delivery).filter(Delivery.email_id == email.id).order_by(Delivery.attempt).all()
 
         if deliveries and deliveries[0].status == "unsuccessful" and len(deliveries) < 3:
             if deliveries[0].attempt + datetime.timedelta(minutes=10) <= datetime.datetime.now():
-                emails_to_send.append((email.id, email.subject, email.sender, email.contents, email.html, email.to,
-                                       email.cc, email.bcc))
+                emails_to_send.append(email_to_dict(email))
 
     return emails_to_send
+
+
+def find_mail_to_delete(all_emails):
+    for email in all_emails:
+        if email.created + datetime.timedelta(days=3) <= datetime.datetime.now():
+            db.session.delete(email)
+            db.session.commit()

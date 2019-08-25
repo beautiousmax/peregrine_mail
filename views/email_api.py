@@ -1,6 +1,6 @@
 from flask import Blueprint, request, abort, jsonify, current_app
 
-from data.models import Email, Delivery
+from data.models import Email, email_deliveries_to_dict
 from data.database import db
 
 blueprint = Blueprint('email', __name__, url_prefix='/')
@@ -46,7 +46,6 @@ def new_email():
 
     # add new email to database
     email = Email(**data)
-
     db.session.add(email)
     db.session.commit()
 
@@ -54,7 +53,7 @@ def new_email():
     db.session.refresh(email)
 
     # add all the email info to queue
-    data['id'] = email.id
+    data['email_id'] = email.id
     current_app.config['EMAIL_QUEUE'].put(data)
 
     # return the new id
@@ -68,27 +67,7 @@ def all_emails():
 
     emails = db.session.query(Email).all()
     for email in emails:
-        status = db.session.query(Delivery).filter(Delivery.email_id == email.id).order_by(Delivery.attempt).all()
-        # TODO add to dict function to model
-        e = {"id": email.id,
-             "contents": email.contents,
-             "to": email.to,
-             "sender": email.sender,
-             "cc": email.cc,
-             "bcc": email.bcc,
-             "subject": email.subject,
-             "attachments": email.attachments,
-             "html": email.html,
-             "created": email.created,
-             "delivery_attempts": []}
-
-        for attempt in status:
-            s = {"status": attempt.status,
-                 "server_message": attempt.server_message,
-                 "attempt": attempt.attempt}
-            e['delivery_attempts'].append(s)
-
-        emails_with_statuses.append(e)
+        emails_with_statuses.append(email_deliveries_to_dict(email))
     return jsonify(emails_with_statuses) if emails_with_statuses else "No emails are here"
 
 
@@ -99,23 +78,4 @@ def specific_email(email_id):
     if not email:
         abort(404)
 
-    e = {"id": email.id,
-         "contents": email.contents,
-         "to": email.to,
-         "sender": email.sender,
-         "cc": email.cc,
-         "bcc": email.bcc,
-         "subject": email.subject,
-         "attachments": email.attachments,
-         "html": email.html,
-         "created": email.created,
-         "delivery_attempts": []}
-
-    status = db.session.query(Delivery).filter(Delivery.email_id == email_id).order_by(Delivery.attempt).all()
-    for attempt in status:
-        s = {"status": attempt.status,
-             "server_message": attempt.server_message,
-             "attempt": attempt.attempt}
-        e['delivery_attempts'].append(s)
-
-    return jsonify(e)
+    return jsonify(email_deliveries_to_dict(email))
