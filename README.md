@@ -1,6 +1,6 @@
 # Peregrine Mail
 
-Demo email service
+Demo email service. Read my design notes [here](design.md).
 
 ## How to Setup and Run
 1. Clone the repository

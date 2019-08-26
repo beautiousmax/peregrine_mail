@@ -1,5 +1,3 @@
-# Data storage design 
-
 ## How it works
 
 1. New message is created using API POST
@@ -11,9 +9,7 @@
     - Criteria is if attempts < 3 and last attempt > 10 mins ago
 5. Emails older than 3 days are removed from the database
 
-
 ## Database structure
-
 
 #### Email
 |field  |description    |
@@ -29,7 +25,6 @@
 |html   | 
 |created |  timestamp|
 
-
 #### delivery
 |field  |description    |
 |-------|---------------|
@@ -42,6 +37,11 @@
 
 ## Development Notes
 
-- Production quality attachments would take me more time than a weekend
 - Used threads because they have less dependencies than something like RQ or Celery, and it's easier to setup for cross platform usage
 - Used sqlalchemy to speed up development. If I had more time, pure SQL would have a speed advantage
+
+## TODO Items
+
+- Attachments
+- API documentation with Swagger
+- Tests
