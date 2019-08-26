@@ -1,7 +1,9 @@
 import queue
 import json
+import logging
 from pathlib import Path
 import os
+import sys
 
 import flask
 
@@ -13,6 +15,14 @@ project_root = os.path.abspath(os.path.dirname(__file__))
 
 
 app = flask.Flask('peregrine')
+
+# Logging
+logger = logging.getLogger("peregrine")
+stream = logging.StreamHandler(stream=sys.stdout)
+stream.setLevel(logging.DEBUG)
+stream.setFormatter(logging.Formatter("%(asctime)s - %(levelname)-8s - %(message)s"))
+logger.addHandler(stream)
+logger.setLevel(logging.DEBUG)
 
 # Background thread requirements
 email_queue = queue.Queue()

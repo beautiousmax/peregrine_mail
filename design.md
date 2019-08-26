@@ -1,11 +1,16 @@
 # Data storage design 
 
-## Possibilities
+## How it works
 
-- dedicated database
-- message queue
-- in memory storage
-- flat file like json 
+1. New message is created using API POST
+    - New email is added to email table
+    - Email ID is returned to user
+2. Email info is sent to background thread queue
+3. New emails waiting in queue are sent to smtp server
+4. Thread looks for failed emails that meet criteria to resend
+    - Criteria is if attempts < 3 and last attempt > 10 mins ago
+5. Emails older than 3 days are removed from the database
+
 
 ## Database structure
 
@@ -35,12 +40,8 @@
 |attempt | timestamp|
 
 
-## Theoretical Process
+## Development Notes
 
-1. New message is created using API POST
-    - New email is added to email table
-    - Email ID is returned to user
-2. Email info is sent to background thread queue
-3. New emails waiting in queue are sent to smtp server
-4. Thread looks for failed emails that meet criteria to resend
-    - Criteria is if attempts < 3 and last attempt > 10 mins ago
+- Production quality attachments would take me more time than a weekend
+- Used threads because they have less dependencies than something like RQ or Celery, and it's easier to setup for cross platform usage
+- Used sqlalchemy to speed up development. If I had more time, pure SQL would have a speed advantage

@@ -2,9 +2,13 @@ from email.message import EmailMessage
 import datetime
 import smtplib
 import ssl
+import logging
 
 from peregrine_mail.data.models import Delivery, email_to_dict
 from peregrine_mail.data.database import db
+
+
+logger = logging.getLogger("peregrine")
 
 
 def send_email(app, email_id, subject, sender, contents, html="", to=(), cc=(), bcc=(), **kwargs):
@@ -26,21 +30,25 @@ def send_email(app, email_id, subject, sender, contents, html="", to=(), cc=(), 
     if html:
         msg.add_alternative(html, subtype='html')
 
-    print(msg.as_string())
-    # TODO awesome logging everywhere
+    logger.debug(f"Sending email id {email_id}")
+    logger.debug("Mail message:\n" + msg.as_string())
     delivery_attempt = Delivery(email_id=email_id, status="", server_message="")
 
     try:
         if app.config['SMTP']['ssl']:
             smtp = smtplib.SMTP_SSL(app.config['SMTP']['host'], port=app.config['SMTP']['port'],
-                                    context=ssl.create_default_context())
+                                    context=ssl.create_default_context(), timeout=10)
         else:
-            smtp = smtplib.SMTP(app.config['SMTP']['host'], port=app.config['SMTP']['port'])
-
+            smtp = smtplib.SMTP(app.config['SMTP']['host'], port=app.config['SMTP']['port'], timeout=10)
+            if app.config['SMTP']['tls']:
+                smtp.starttls()
         if app.config['SMTP']['username']:
             smtp.login(user=app.config['SMTP']['username'], password=app.config['SMTP']['password'])
     except ConnectionError as e:
         delivery_attempt.status = "unsuccessful"
+        delivery_attempt.server_message = str(e)
+    except Exception as e:
+        delivery_attempt.status = "unexpected error"
         delivery_attempt.server_message = str(e)
     else:
 
@@ -49,6 +57,9 @@ def send_email(app, email_id, subject, sender, contents, html="", to=(), cc=(), 
             smtp.quit()
         except smtplib.SMTPException as e:
             delivery_attempt.status = "unsuccessful"
+            delivery_attempt.server_message = str(e)
+        except Exception as e:
+            delivery_attempt.status = "unexpected error"
             delivery_attempt.server_message = str(e)
         else:
             delivery_attempt.status = "successful"
@@ -75,5 +86,6 @@ def find_mail_to_send(app, all_emails):
 def find_mail_to_delete(all_emails):
     for email in all_emails:
         if email.created + datetime.timedelta(days=3) <= datetime.datetime.now():
+            logger.debug(f"Deleting email id {email.id}")
             db.session.delete(email)
             db.session.commit()

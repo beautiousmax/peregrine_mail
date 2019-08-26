@@ -3,7 +3,8 @@
     "host": "localhost",
     "port": 2500,
     "ssl": false,
-    "username": "",
-    "password": ""
+    "tls": false,
+    "username": null,
+    "password": null
   }
 }
