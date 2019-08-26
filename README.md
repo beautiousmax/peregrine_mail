@@ -5,7 +5,7 @@ Demo email service
 ## How to Setup and Run
 1. Clone the repository
 ```
-git clone --single-branch --branch development git@github.com:beautiousmax/peregrine_mail.git
+git clone --single-branch --branch development https://github.com/beautiousmax/peregrine_mail.git
 ```
 2. Move into the project
 ```
@@ -18,7 +18,7 @@ source venv/bin/activate
 ```
 4. Install requirements
 ```
-pip install -r requirements
+pip install -r requirements.txt
 ```
 5. Set up config file
     - Copy config.json.example to config.json
@@ -29,23 +29,22 @@ python -m peregrine_mail
 ```
 
 ## API METHODS
-- add some swagger / raml api documentation
 ### POST api/v1/
-send email, get back id
-- retry up to 3 times with 10 minute interval in case of failure
+- Use request body to construct email, get back new email id
+- Example:
+```
+{"to": "you@gmail.com", 
+"cc": null, 
+"bcc": null, 
+"sender": "me@hotmail.com", 
+"contents": "Thanks for trying peregrine mail!", 
+"subject": "test email", 
+"html": null}
+```
+- In case of failure, messages are resent up to 3 times with a 10 minute interval 
 
 ### GET api/v1/<id> 
 see status of specific email
 
 ### GET api/v1/
 see status of all email
-
-
-
-## Web-based user interface
-
-- Page to send emails
-- Index of statuses
-
-Maybe use bootstrap
-

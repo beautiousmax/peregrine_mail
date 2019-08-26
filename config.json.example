@@ -1,6 +1,12 @@
 {
-  "smtp": {
-    "host": "localhost",
+  "peregrine_mail": {
+    "host": "127.0.0.1",
+    "port": 5000,
+    "retain_email_days": 3,
+    "log_level": "debug"
+  },
+  "smtp_server": {
+    "host": "127.0.0.1",
     "port": 2500,
     "ssl": false,
     "tls": false,
